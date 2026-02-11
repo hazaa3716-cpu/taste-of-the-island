@@ -3,19 +3,43 @@ let currentProducts = [];
 
 async function checkAdminAuth() {
   try {
-    const resp = await fetch('auth.php?action=verify');
-    const data = await resp.json();
+    const rawResp = await fetch('auth.php?action=verify');
+    const text = await rawResp.text();
+    console.log('Auth Verify Response:', text); // DEBUG
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('JSON Parse Error:', e);
+      alert('Server error: Invalid JSON response. Check console.');
+      return false;
+    }
+
     if (!data.authenticated || data.user.role !== 'admin') {
-      alert('Admin access required. Redirecting to login...');
+      console.warn('Redirecting to login: Not authenticated or not admin', data);
       window.location.href = 'index.html';
       return false;
     }
-    document.getElementById('admin-user-info').querySelector('span').textContent = data.user.username;
+
+    const userInfo = document.getElementById('admin-user-info');
+    if (userInfo) {
+      const span = userInfo.querySelector('span');
+      if (span) span.textContent = data.user.username;
+    } else {
+      console.warn('DOM Element "admin-user-info" not found. User is logged in as:', data.user.username);
+    }
+
     localStorage.setItem('currentUser', JSON.stringify(data.user));
     return true;
   } catch (e) {
     console.error('Auth verification failed', e);
-    window.location.href = 'index.html';
+    // Only redirect if it's a network/fetch error, not a DOM error
+    if (e.message.includes('NetworkError') || e.message.includes('fetch')) {
+      alert('Network error during auth check. Redirecting...');
+      window.location.href = 'index.html';
+    } else {
+      console.error('Non-critical auth error (staying on page):', e);
+    }
     return false;
   }
 }
