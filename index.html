@@ -655,6 +655,8 @@
         <li><a href="#" class="nav-link" data-page="menu">Menu</a></li>
         <li><a href="#" class="nav-link" data-page="cart">Cart</a></li>
         <li><a href="#" class="nav-link" data-page="delivery">Delivery Info</a></li>
+        <li><a href="admin.html" id="admin-dashboard-link"
+            style="display:none; font-weight:bold; color:#b00020;">Dashboard</a></li>
       </ul>
       <button class="logout-btn" id="logoutBtn" title="Logout">Logout</button>
     </nav>
@@ -1181,12 +1183,14 @@
           if (res.success) {
             if (isLoginMode) {
               localStorage.setItem('currentUser', JSON.stringify(res.user));
+              showPage('home'); // Always go to home
+              fetchMenu();
+              setupUserNavigation();
+
               if (res.user.role === 'admin') {
-                window.location.href = 'admin.html';
-              } else {
-                showPage('home');
-                fetchMenu();
-                setupUserNavigation();
+                const adminLink = document.getElementById('admin-dashboard-link');
+                if (adminLink) adminLink.style.display = 'inline-block';
+                showNotification('Welcome Admin! Access Dashboard via menu.');
               }
             } else {
               errorMsg.style.color = 'green';
@@ -1337,12 +1341,14 @@
         const data = await resp.json();
         if (data.authenticated) {
           localStorage.setItem('currentUser', JSON.stringify(data.user));
+          showPage('home');
+          fetchMenu();
+          setupUserNavigation();
+
           if (data.user.role === 'admin') {
-            window.location.href = 'admin.html';
-          } else {
-            showPage('home');
-            fetchMenu();
-            setupUserNavigation();
+            const adminLink = document.getElementById('admin-dashboard-link');
+            if (adminLink) adminLink.style.display = 'inline-block';
+            showNotification('Welcome Admin! Access Dashboard via menu.');
           }
         } else {
           showPage('login');
