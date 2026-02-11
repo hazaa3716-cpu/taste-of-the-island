@@ -79,5 +79,5 @@ INSERT INTO products (category_id, name, price, rating, reviews_count, discount,
 (2, 'Maziwa mgando', 1000, 4.5, 75, 0, 'https://i.pinimg.com/1200x/e3/0e/0a/e30e0a3070bae2b2ec7a9a6101c85b7b.jpg');
 
 -- Default Admin (Username: sam, Password: sam22)
-INSERT INTO users (username, password, role) VALUES ('sam', '$2y$10$V4Z.hEpMOI6wI50rcnOskuwVaY/hgb6A7OGsCa1E2GZCVYsBsglCy', 'admin'); 
+INSERT INTO users (username, password, role) VALUES ('sam', '$2y$10$R5aeNJgcfTcAEyHDOUGF.eAEpbdNFMrzU5jGE/dJlR3mbZWE2JkmS', 'admin'); 
 -- The above is a dummy hash. PHP script should handle real registration.
