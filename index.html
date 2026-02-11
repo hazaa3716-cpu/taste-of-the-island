@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Swahili Food Ordering System</title>
+  <style>
+    /* Full CSS styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-color: #fff8f0;
+      color: #4b3b2b;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-size: 16px;
+    }
+
+    .navbar {
+      background-color: #d2691e;
+      padding: 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .navbar ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin: 0;
+      padding: 0;
+      flex-grow: 1;
+    }
+
+    .navbar a,
+    .navbar button.logout-btn {
+      color: #fff8f0;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: color 0.3s ease;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .navbar a:hover,
+    .navbar a.active,
+    .navbar button.logout-btn:hover {
+      color: #ffa500;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ffa500, #d2691e);
+      color: white;
+      padding: 4rem 2rem;
+      text-align: center;
+      font-weight: 700;
+      font-size: 2rem;
+      border-radius: 0 0 30px 30px;
+      margin-bottom: 2rem;
+    }
+
+    /* About & Features images */
+    .about-us-content img,
+    .features-content img {
+      width: 100%;
+      max-width: 420px;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      object-fit: cover;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Larger images when on home page only */
+    #home .about-us-content img,
+    #home .features-content img {
+      max-width: 520px;
+    }
+
+    .feature-item .feature-subimage {
+      width: 100%;
+      max-width: 420px;
+      border-radius: 6px;
+      display: block;
+      object-fit: cover;
+      margin-top: 0.5rem;
+    }
+
+    .about-us-content {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .features-content {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Support chat button & window */
+    #support-btn {
+      position: fixed;
+      right: 1.5rem;
+      bottom: 1.5rem;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #d2691e;
+      color: white;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      z-index: 2000;
+    }
+
+    #support-window {
+      position: fixed;
+      right: 1.5rem;
+      bottom: 80px;
+      width: 320px;
+      max-height: 420px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 2000;
+    }
+
+    #support-window header {
+      background: #d2691e;
+      color: white;
+      padding: 0.6rem 0.9rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #support-messages {
+      padding: 0.75rem;
+      overflow-y: auto;
+      flex-grow: 1;
+      font-size: 0.95rem;
+    }
+
+    .support-msg {
+      margin: 0.4rem 0;
+    }
+
+    .support-msg .from {
+      font-weight: 700;
+      margin-right: 0.4rem;
+    }
+
+    #support-input {
+      display: flex;
+      border-top: 1px solid #eee;
+    }
+
+    #support-input textarea {
+      flex: 1;
+      padding: 0.5rem;
+      border: none;
+      resize: none;
+      font-family: inherit;
+    }
+
+    #support-input button {
+      background: #ffa500;
+      border: none;
+      padding: 0 0.9rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .contact-section {
+      max-width: 600px;
+      margin: 2rem auto 4rem auto;
+      background-color: #fff3e0;
+      padding: 1.5rem 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(210, 105, 30, 0.3);
+      text-align: center;
+      font-weight: 600;
+      color: #4b3b2b;
+    }
+
+    .contact-section h3 {
+      margin-bottom: 1rem;
+      color: #d2691e;
+    }
+
+    .contact-links a {
+      display: inline-block;
+      margin: 0 1rem;
+      color: #d2691e;
+      font-weight: 700;
+      text-decoration: none;
+      border: 2px solid #d2691e;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .contact-links a:hover {
+      background-color: #d2691e;
+      color: #fff8f0;
+    }
+
+    .login-container {
+      max-width: 400px;
+      margin: 5rem auto;
+      background-color: #fff3e0;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(210, 105, 30, 0.3);
+    }
+
+    .login-container h1 {
+      margin-bottom: 1.5rem;
+      text-align: center;
+      color: #d2691e;
+    }
+
+    .login-container label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+    }
+
+    .login-container input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 2px solid #d2691e;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .login-container button {
+      width: 100%;
+      padding: 0.7rem;
+      background-color: #ffa500;
+      border: none;
+      border-radius: 5px;
+      color: #4b3b2b;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .login-container button:hover {
+      background-color: #d2691e;
+      color: #fff8f0;
+    }
+
+    .error-message {
+      color: #b00020;
+      font-weight: 600;
+      text-align: center;
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .menu-section {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .menu-section h2,
+    .menu-section h3 {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #d2691e;
+    }
+
+    .menu-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .menu-card {
+      background-color: #fff3e0;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(210, 105, 30, 0.2);
+      padding: 1rem;
+      text-align: center;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .menu-card .image-placeholder {
+      background-color: #d2691e;
+      color: #fff8f0;
+      height: 300px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 700;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .menu-card h4 {
+      margin-bottom: 0.5rem;
+      color: #4b3b2b;
+    }
+
+    .menu-card p.price {
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #d2691e;
+    }
+
+    .menu-card .rating {
+      margin-bottom: 0.5rem;
+      color: #ffa500;
+    }
+
+    .menu-card button {
+      background-color: #ffa500;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      font-weight: 700;
+      color: #4b3b2b;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-bottom: 0.5rem;
+    }
+
+    .menu-card button:hover {
+      background-color: #d2691e;
+      color: #fff8f0;
+    }
+
+    .menu-card .fav-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #d2691e;
+      transition: color 0.3s ease;
+    }
+
+    .menu-card .fav-btn.favorited {
+      color: #ffa500;
+    }
+
+    #cart-items {
+      max-width: 700px;
+      margin: 1rem auto;
+      padding: 0 1rem;
+    }
+
+    .cart-item {
+      background-color: #fff3e0;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(210, 105, 30, 0.2);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cart-item p {
+      margin: 0 0.5rem;
+      font-weight: 600;
+      color: #4b3b2b;
+    }
+
+    .cart-item button {
+      background-color: #b00020;
+      border: none;
+      color: white;
+      padding: 0.3rem 0.7rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background-color 0.3s ease;
+    }
+
+    .cart-item button:hover {
+      background-color: #7a0015;
+    }
+
+    .cart-summary {
+      max-width: 700px;
+      margin: 1rem auto;
+      padding: 1rem;
+      background-color: #fff3e0;
+      border-radius: 10px;
+      text-align: right;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #d2691e;
+    }
+
+    .cart-summary button {
+      background-color: #ffa500;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 5px;
+      font-weight: 700;
+      color: #4b3b2b;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-left: 1rem;
+    }
+
+    .cart-summary button:hover {
+      background-color: #d2691e;
+      color: #fff8f0;
+    }
+
+    .confirmation-message {
+      text-align: center;
+      font-weight: 700;
+      color: #2e7d32;
+      margin-top: 1rem;
+    }
+
+    #delivery-form {
+      max-width: 700px;
+      margin: 1rem auto 3rem auto;
+      background-color: #fff3e0;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(210, 105, 30, 0.3);
+    }
+
+    #delivery-form h3 {
+      color: #d2691e;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    #delivery-form label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 600;
+      color: #4b3b2b;
+    }
+
+    #delivery-form input,
+    #delivery-form textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border: 2px solid #d2691e;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    #delivery-form button {
+      background-color: #ffa500;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 5px;
+      font-weight: 700;
+      color: #4b3b2b;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      display: block;
+      margin: 0 auto;
+    }
+
+    #delivery-form button:hover {
+      background-color: #d2691e;
+      color: #fff8f0;
+    }
+
+    #notification {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background-color: #d2691e;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      display: none;
+      z-index: 1000;
+      font-weight: 700;
+    }
+
+    #search-suggestions {
+      position: absolute;
+      background: white;
+      border: 1px solid #d2691e;
+      border-radius: 5px;
+      max-width: 300px;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+    }
+
+    #search-suggestions div {
+      padding: 0.5rem;
+      cursor: pointer;
+    }
+
+    #search-suggestions div:hover,
+    #search-suggestions div.active {
+      background-color: #d2691e;
+      color: white;
+    }
+
+    @media (max-width: 600px) {
+      .navbar ul {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .menu-items {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        font-size: 1.5rem;
+        padding: 3rem 1rem;
+      }
+
+      .login-container {
+        margin: 3rem 1rem;
+      }
+    }
+
+    .page {
+      display: none;
+    }
+
+    .active-page {
+      display: block;
+    }
+
+    /* Additional styles for Home page sections */
+    .about-us,
+    .features,
+    .contacts {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: #fff3e0;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(210, 105, 30, 0.3);
+    }
+
+    .about-us h2,
+    .features h2,
+    .contacts h2 {
+      color: #d2691e;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .about-us-content,
+    .features-content,
+    .contacts-content {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .about-us-content img,
+    .features-content img,
+    .contacts-content img {
+      max-width: 300px;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
+    .about-us-text,
+    .feature-item p,
+    .contact-item p {
+      color: #4b3b2b;
+      font-size: 1.1rem;
+    }
+
+    .feature-item,
+    .contact-item {
+      flex: 1 1 250px;
+      text-align: center;
+    }
+
+    .feature-item h3 {
+      color: #d2691e;
+      margin: 0.5rem 0;
+    }
+
+    .contact-item a {
+      color: #d2691e;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .contact-item a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="notification" role="alert" aria-live="assertive"></div>
+  <header id="header" style="display:none;">
+    <nav class="navbar">
+      <ul>
+        <li><a href="#" class="nav-link" data-page="home">Home</a></li>
+        <li><a href="#" class="nav-link" data-page="menu">Menu</a></li>
+        <li><a href="#" class="nav-link" data-page="cart">Cart</a></li>
+        <li><a href="#" class="nav-link" data-page="delivery">Delivery Info</a></li>
+      </ul>
+      <button class="logout-btn" id="logoutBtn" title="Logout">Logout</button>
+    </nav>
+  </header>
+
+  <!-- Login Page -->
+  <main id="login" class="page active-page">
+    <section class="login-container">
+      <h1 id="form-title">Login to Swahili Food Ordering</h1>
+      <form id="authForm" novalidate>
+        <label for="username">Username</label>
+        <input type="text" id="auth-username" name="username" placeholder="Enter username" required
+          autocomplete="username" />
+        <label for="password">Password</label>
+        <input type="password" id="auth-password" name="password" placeholder="Enter password" required
+          autocomplete="current-password" />
+        <button type="submit" id="auth-submit-btn">Login</button>
+      </form>
+      <p id="errorMsg" class="error-message" role="alert"></p>
+      <p style="text-align:center; margin-top:1rem;">
+        <button id="toggleAuthBtn"
+          style="background:none; border:none; color:#d2691e; cursor:pointer; font-weight:700;">
+          Don't have an account? Register here
+        </button>
+      </p>
+    </section>
+
+  </main>
+
+  <!-- Home Page with About Us, Features, Contacts -->
+  <main id="home" class="page">
+    <section class="hero">
+      <h1>Welcome!</h1>
+      <p>Delicious traditional Swahili dishes delivered to your doorstep.</p>
+    </section>
+
+    <section class="about-us">
+      <h2>About Us</h2>
+      <div class="about-us-content">
+        <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80"
+          alt="About Us Image" />
+        <p class="about-us-text">
+          We are passionate about bringing authentic Swahili cuisine to your table. Our dishes are prepared with
+          traditional recipes and fresh ingredients, ensuring a delightful experience with every bite.
+        </p>
+      </div>
+    </section>
+
+    <section class="features">
+      <h2>Our Impressive Features</h2>
+      <div class="features-content">
+        <div class="feature-item">
+          <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80"
+            alt="Fresh Ingredients" />
+          <h3>Fresh Ingredients</h3>
+          <p>We use only the freshest ingredients sourced locally to ensure quality and taste.</p>
+        </div>
+        <div class="feature-item">
+          <img src="https://images.unsplash.com/photo-1523986371872-9d3ba2e2f642?auto=format&fit=crop&w=800&q=80"
+            alt="Traditional Recipes" />
+          <img class="feature-subimage"
+            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1000&q=80"
+            alt="Traditional Cooking" />
+          <h3>Traditional Recipes</h3>
+          <p>Our dishes are made following authentic Swahili recipes passed down through generations.</p>
+        </div>
+        <div class="feature-item">
+          <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"
+            alt="Fast Delivery" />
+          <h3>Fast Delivery</h3>
+          <p>Enjoy your meal quickly with our reliable and fast delivery service.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="contacts">
+      <h2>Our Contacts</h2>
+      <div class="contacts-content">
+        <div class="contact-item">
+          <img src="path/to/whatsapp-icon.png" alt="WhatsApp" style="width:60px;" />
+          <p><a href="https://wa.me/255757816565" target="_blank" rel="noopener">+255 757 816 565 (WhatsApp)</a></p>
+        </div>
+        <div class="contact-item">
+          <img src="path/to/phone-icon.png" alt="Phone" style="width:60px;" />
+          <p><a href="tel:+255757816565">+255 757 816 565 (Call)</a></p>
+        </div>
+        <div class="contact-item">
+          <img src="path/to/location-icon.png" alt="Location" style="width:60px;" />
+          <p><a href="https://maps.app.goo.gl/bBPRzqbe6BLjwRiP9" target="_blank" rel="noopener">Our Location on Google
+              Maps</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Menu Page -->
+  <main id="menu" class="page" style="position:relative;">
+    <h2>Swahili Food Menu</h2>
+    <section class="menu-section" style="position:relative;">
+      <div style="position:relative; max-width:300px; margin:0 auto 1rem auto;">
+        <input type="text" id="searchInput" placeholder="Search foods or drinks..." aria-label="Search foods or drinks"
+          autocomplete="off"
+          style="width:100%; padding:0.5rem; border-radius:5px; border:1px solid #d2691e; font-size:1rem;" />
+        <div id="search-suggestions" role="listbox" aria-label="Search suggestions"></div>
+      </div>
+      <h3>Foods</h3>
+      <div class="menu-items" id="food-items"></div>
+      <h3>Drinks</h3>
+      <div class="menu-items" id="drink-items"></div>
+    </section>
+  </main>
+
+  <!-- Cart Page -->
+  <main id="cart" class="page">
+    <h2>Your Cart</h2>
+    <section id="cart-items"></section>
+    <div class="cart-summary">
+      <p>Total: <span id="total-price">0</span> TZS</p>
+      <button id="checkout-btn">Checkout</button>
+    </div>
+    <p id="checkout-message" class="confirmation-message"></p>
+  </main>
+
+  <!-- Delivery Info Page -->
+  <main id="delivery" class="page">
+    <h2>Delivery Information</h2>
+    <form id="delivery-form" novalidate>
+      <h3>Enter your delivery details</h3>
+      <label for="phone">Phone Number</label>
+      <input type="tel" id="phone" name="phone" placeholder="+255 7XX XXX XXX" required
+        pattern="^\\+255\\s7\\d{2}\\s\\d{3}\\s\\d{3}$" />
+      <label for="address">Delivery Address</label>
+      <textarea id="address" name="address" placeholder="Enter your delivery address" required></textarea>
+      <button type="submit">Submit Delivery Info</button>
+    </form>
+    <p id="delivery-message" class="confirmation-message"></p>
+    <p id="call-link-container" style="text-align:center; margin-top:1rem;"></p>
+  </main>
+
+  <!-- admin panel removed -->
+
+  <!-- Support chat button & window -->
+  <button id="support-btn" aria-label="Open support chat">💬</button>
+  <div id="support-window" role="dialog" aria-modal="false" aria-label="Support chat window">
+    <header>
+      <span>Support</span>
+      <button id="support-close" aria-label="Close support"
+        style="background:transparent;border:none;color:white;font-weight:700;cursor:pointer;">✖</button>
+    </header>
+    <div id="support-messages" aria-live="polite"></div>
+    <div id="support-input">
+      <textarea id="support-text" rows="2" placeholder="Type a message..."></textarea>
+      <button id="support-send">Send</button>
+    </div>
+  </div>
+
+  <script>
+    // JavaScript code integrating all features including admin panel and role-based navigation
+
+    let foods = [];
+    let drinks = [];
+    let cart = [];
+    let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+
+    // No longer needed: let orders = JSON.parse(localStorage.getItem('orders')) || [];
+    // if (!localStorage.getItem('users')) { ... }
+    // let users = JSON.parse(localStorage.getItem('users'));
+
+    const pages = ['login', 'home', 'menu', 'cart', 'delivery'];
+    const header = document.getElementById('header');
+    const errorMsg = document.getElementById('errorMsg');
+    const foodItemsContainer = document.getElementById('food-items');
+    const drinkItemsContainer = document.getElementById('drink-items');
+    const cartItemsContainer = document.getElementById('cart-items');
+    const totalPriceElem = document.getElementById('total-price');
+    const checkoutMessage = document.getElementById('checkout-message');
+    const deliveryForm = document.getElementById('delivery-form');
+    const deliveryMessage = document.getElementById('delivery-message');
+    const callLinkContainer = document.getElementById('call-link-container');
+    const notification = document.getElementById('notification');
+    const searchInput = document.getElementById('searchInput');
+    const searchSuggestions = document.getElementById('search-suggestions');
+    const authForm = document.getElementById('authForm');
+    const authUsername = document.getElementById('auth-username');
+    const authPassword = document.getElementById('auth-password');
+    const toggleAuthBtn = document.getElementById('toggleAuthBtn');
+    const formTitle = document.getElementById('form-title');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
+
+    let isLoginMode = true;
+
+    function showPage(pageId) {
+      pages.forEach(p => document.getElementById(p).classList.remove('active-page'));
+      document.getElementById(pageId).classList.add('active-page');
+      if (pageId === 'login') header.style.display = 'none'; else header.style.display = 'flex';
+      errorMsg.textContent = '';
+      checkoutMessage.textContent = '';
+      deliveryMessage.textContent = '';
+      callLinkContainer.innerHTML = '';
+      hideNotification();
+      clearSearchSuggestions();
+      if (pageId !== 'login') {
+        setupUserNavigation();
+      }
+      // send automated support message for this page (once per session)
+      try { sendAutoSupportMessage(pageId); } catch (e) { /* ignore */ }
+    }
+
+    function showNotification(msg) {
+      notification.textContent = msg;
+      notification.style.display = 'block';
+      setTimeout(() => notification.style.display = 'none', 4000);
+    }
+    function hideNotification() { notification.style.display = 'none'; }
+    function clearSearchSuggestions() {
+      searchSuggestions.innerHTML = '';
+      searchSuggestions.style.display = 'none';
+    }
+
+    // Automated support messages (notification + live chat message)
+    function sendAutoSupportMessage(pageId) {
+      try {
+        const key = 'autoSupportShown_' + pageId;
+        if (sessionStorage.getItem(key)) return;
+        sessionStorage.setItem(key, '1');
+        const messages = {
+          home: 'Welcome! Need help finding something? We can recommend popular dishes.',
+          menu: 'Need recommendations? Ask for popular or discounted dishes.',
+          cart: 'Need help completing your order? I can assist with checkout or delivery.',
+          delivery: 'Need help with delivery details or tracking? We can assist.'
+        };
+        const msg = messages[pageId] || 'Hello! Need assistance?';
+        setTimeout(() => {
+          // site notification
+          showNotification('Support: ' + msg);
+          // also append to live chat and open it
+          if (typeof appendLiveChatMessage === 'function' && liveChatWindow) {
+            liveChatWindow.style.display = 'flex';
+            appendLiveChatMessage('Support', msg);
+          }
+        }, 1200);
+      } catch (e) {
+        console.error('Auto support message failed', e);
+      }
+    }
+
+    async function fetchMenu() {
+      try {
+        const resp = await fetch('menu.php');
+        const data = await resp.json();
+        foods = data.filter(i => i.category_name === 'Foods');
+        drinks = data.filter(i => i.category_name === 'Drinks');
+        renderMenuItems();
+      } catch (e) {
+        console.error('Failed to fetch menu', e);
+      }
+    }
+
+    // --- Search behavior: live filter + suggestions ---
+    (function setupSearch() {
+      const getAll = () => [...foods, ...drinks];
+
+      function showSuggestionsFor(query) {
+        const q = query.trim().toLowerCase();
+        if (!q) { clearSearchSuggestions(); return; }
+        const matches = getAll().filter(i => i.name.toLowerCase().includes(q)).slice(0, 5);
+        if (matches.length === 0) { clearSearchSuggestions(); return; }
+        searchSuggestions.innerHTML = '';
+        matches.forEach(item => {
+          const d = document.createElement('div');
+          d.textContent = item.name;
+          d.tabIndex = 0;
+          d.addEventListener('click', () => {
+            searchInput.value = item.name;
+            clearSearchSuggestions();
+            renderMenuItems(item.name);
+          });
+          d.addEventListener('keydown', e => { if (e.key === 'Enter') d.click(); });
+          searchSuggestions.appendChild(d);
+        });
+        searchSuggestions.style.display = 'block';
+      }
+
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value;
+        if (!q.trim()) {
+          renderMenuItems();
+          clearSearchSuggestions();
+          return;
+        }
+        renderMenuItems(q);
+        showSuggestionsFor(q);
+      });
+
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const q = searchInput.value.trim();
+          if (q) {
+            renderMenuItems(q);
+            clearSearchSuggestions();
+          }
+        } else if (e.key === 'Escape') {
+          clearSearchSuggestions();
+          searchInput.blur();
+        }
+      });
+
+      // hide suggestions when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#search-suggestions') && !e.target.closest('#searchInput')) {
+          clearSearchSuggestions();
+        }
+      });
+    })();
+
+    // Render menu items with ratings, discounts, favorites and images
+    function renderMenuItems(filter = '') {
+      function renderCard(item) {
+        const discountedPrice = item.discount ? Math.round(item.price * (1 - item.discount / 100)) : item.price;
+        const isFav = favorites.includes(item.id);
+        return `
+        <div class="menu-card" data-id="${item.id}">
+          <button class="fav-btn ${isFav ? 'favorited' : ''}" aria-label="${isFav ? 'Remove from favorites' : 'Add to favorites'}">
+            ${isFav ? '★' : '☆'}
+          </button>
+          <div class="image-placeholder" style="background-image: url('${item.image_url || item.image}');"></div>
+          <h4>${item.name}</h4>
+          <p class="price">${discountedPrice} TZS${item.discount ? ` <small style="text-decoration:line-through; color:#a0522d;">${item.price} TZS</small>` : ''}</p>
+          <p class="rating">⭐ ${item.rating} (${item.reviews_count || item.reviews})</p>
+          <button class="add-cart-btn">Add to Cart</button>
+        </div>
+      `;
+      }
+
+      const filteredFoods = foods.filter(f => f.name.toLowerCase().includes(filter.toLowerCase()));
+      const filteredDrinks = drinks.filter(d => d.name.toLowerCase().includes(filter.toLowerCase()));
+
+      foodItemsContainer.innerHTML = filteredFoods.map(renderCard).join('') || '<p>No foods found.</p>';
+      drinkItemsContainer.innerHTML = filteredDrinks.map(renderCard).join('') || '<p>No drinks found.</p>';
+
+      document.querySelectorAll('.menu-card').forEach(card => {
+        const id = parseInt(card.dataset.id);
+        const favBtn = card.querySelector('.fav-btn');
+        const addCartBtn = card.querySelector('.add-cart-btn');
+
+        favBtn.onclick = () => toggleFavorite(id, favBtn);
+        addCartBtn.onclick = () => {
+          const item = foods.find(f => f.id === id) || drinks.find(d => d.id === id);
+          if (item) addToCart(item);
+        };
+      });
+    }
+
+    function toggleFavorite(id, button) {
+      const index = favorites.indexOf(id);
+      if (index === -1) {
+        favorites.push(id);
+        button.classList.add('favorited');
+        button.textContent = '★';
+        showNotification('Added to favorites');
+      } else {
+        favorites.splice(index, 1);
+        button.classList.remove('favorited');
+        button.textContent = '☆';
+        showNotification('Removed from favorites');
+      }
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+    }
+
+    function addToCart(item) {
+      const existing = cart.find(i => i.id === item.id);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        cart.push({ ...item, quantity: 1 });
+      }
+      showNotification(`${item.name} added to cart.`);
+      renderCart();
+    }
+
+    function renderCart() {
+      cartItemsContainer.innerHTML = '';
+      if (cart.length === 0) {
+        cartItemsContainer.innerHTML = '<p>Your cart is empty.</p>';
+        totalPriceElem.textContent = '0';
+        checkoutMessage.textContent = '';
+        return;
+      }
+      cart.forEach((item, index) => {
+        const discountedPrice = item.discount ? Math.round(item.price * (1 - item.discount / 100)) : item.price;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+        <p>${item.name} x ${item.quantity}</p>
+        <p>${discountedPrice * item.quantity} TZS</p>
+        <button aria-label="Remove ${item.name} from cart">Remove</button>
+      `;
+        div.querySelector('button').addEventListener('click', () => {
+          removeFromCart(index);
+        });
+        cartItemsContainer.appendChild(div);
+      });
+      const total = cart.reduce((sum, item) => {
+        const price = item.discount ? Math.round(item.price * (1 - item.discount / 100)) : item.price;
+        return sum + price * item.quantity;
+      }, 0);
+      totalPriceElem.textContent = total;
+      checkoutMessage.textContent = '';
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      renderCart();
+    }
+
+    document.getElementById('checkout-btn').addEventListener('click', () => {
+      if (cart.length === 0) {
+        alert('Your cart is empty.');
+        return;
+      }
+      showPage('delivery');
+    });
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const page = e.target.dataset.page;
+        showPage(page);
+        if (page === 'menu') fetchMenu();
+        if (page === 'cart') renderCart();
+        checkoutMessage.textContent = '';
+      });
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      showPage('login');
+      cart = [];
+      checkoutMessage.textContent = '';
+      errorMsg.textContent = '';
+      authForm.reset();
+      errorMsg.style.color = '#b00020';
+      setupUserNavigation();
+    });
+
+    deliveryForm.addEventListener('submit', e => {
+      e.preventDefault();
+      deliveryMessage.textContent = '';
+      callLinkContainer.innerHTML = '';
+      const phone = deliveryForm.phone.value.trim();
+      const address = deliveryForm.address.value.trim();
+
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      const total = cart.reduce((sum, item) => {
+        const price = item.discount ? Math.round(item.price * (1 - item.discount / 100)) : item.price;
+        return sum + price * item.quantity;
+      }, 0);
+
+      fetch('orders.php?action=submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser ? currentUser.id : null,
+          totalPrice: total,
+          phone: phone,
+          address: address,
+          items: cart.map(i => ({ id: i.id, quantity: i.quantity, price: i.discount ? Math.round(i.price * (1 - i.discount / 100)) : i.price }))
+        })
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            deliveryMessage.textContent = 'Thank you! Your order has been received. Order ID: ' + res.orderId;
+            callLinkContainer.innerHTML = `<a href="tel:${phone}" style="font-weight:bold; color:#d2691e;">Call to confirm delivery: ${phone}</a>`;
+            cart = [];
+            renderCart();
+            showNotification('Order placed successfully!');
+          } else {
+            alert('Order failed: ' + res.message);
+          }
+        });
+    });
+
+    toggleAuthBtn.addEventListener('click', () => {
+      isLoginMode = !isLoginMode;
+      if (isLoginMode) {
+        formTitle.textContent = 'Login to Swahili Food Ordering';
+        authSubmitBtn.textContent = 'Login';
+        toggleAuthBtn.textContent = "Don't have an account? Register here";
+        errorMsg.style.color = '#b00020';
+      } else {
+        formTitle.textContent = 'Register a New Account';
+        authSubmitBtn.textContent = 'Register';
+        toggleAuthBtn.textContent = "Already have an account? Login here";
+        errorMsg.style.color = '#b00020';
+      }
+      errorMsg.textContent = '';
+      authForm.reset();
+    });
+
+    authForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const username = authUsername.value.trim();
+      const password = authPassword.value.trim();
+      if (!username || !password) {
+        errorMsg.textContent = 'Please enter both username and password.';
+        return;
+      }
+
+      const action = isLoginMode ? 'login' : 'register';
+      fetch(`auth.php?action=${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            if (isLoginMode) {
+              localStorage.setItem('currentUser', JSON.stringify(res.user));
+              if (res.user.role === 'admin') {
+                window.location.href = 'admin.html';
+              } else {
+                showPage('home');
+                fetchMenu();
+                setupUserNavigation();
+              }
+            } else {
+              errorMsg.style.color = 'green';
+              errorMsg.textContent = 'Registration successful! You can now login.';
+              isLoginMode = true;
+              formTitle.textContent = 'Login to Swahili Food Ordering';
+              authSubmitBtn.textContent = 'Login';
+              toggleAuthBtn.textContent = "Don't have an account? Register here";
+              authForm.reset();
+            }
+          } else {
+            errorMsg.textContent = res.message;
+          }
+        })
+        .catch(err => {
+          errorMsg.textContent = 'Server error. Please try again.';
+        });
+    });
+
+    // admin UI removed; renderAdmin() deleted
+
+    // admin add/remove handlers removed with admin UI
+
+    function setupAdminNavigation() {
+      document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.dataset.page === 'admin') link.style.display = 'inline-block';
+        else link.style.display = 'none';
+      });
+    }
+
+    function setupUserNavigation() {
+      document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.dataset.page === 'admin') link.style.display = 'none';
+        else link.style.display = 'inline-block';
+      });
+    }
+
+    // Apply saved home hero image (if any)
+    function applySavedHomeImage() {
+      const url = localStorage.getItem('homeHeroImage');
+      const hero = document.querySelector('.hero');
+      const preview = document.getElementById('home-image-preview');
+      if (!hero) return;
+      if (url) {
+        hero.style.background = `url('${url}') center/cover no-repeat`;
+        if (preview) preview.style.backgroundImage = `url('${url}')`;
+      } else {
+        hero.style.background = 'linear-gradient(135deg, #ffa500, #d2691e)';
+        if (preview) preview.style.backgroundImage = '';
+      }
+    }
+
+    // Handler to save image URL or file
+    function setupHomeImageHandlers() {
+      const urlInput = document.getElementById('home-image-url');
+      const fileInput = document.getElementById('home-image-file');
+      const btn = document.getElementById('update-home-image-btn');
+      const preview = document.getElementById('home-image-preview');
+      if (!btn) return;
+
+      btn.addEventListener('click', () => {
+        const url = urlInput.value.trim();
+        if (url) {
+          localStorage.setItem('homeHeroImage', url);
+          applySavedHomeImage();
+          showNotification('Home image updated from URL');
+          return;
+        }
+        // if no URL, check file input
+        if (fileInput.files && fileInput.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const data = e.target.result;
+            localStorage.setItem('homeHeroImage', data);
+            applySavedHomeImage();
+            showNotification('Home image updated from uploaded file');
+          };
+          reader.readAsDataURL(fileInput.files[0]);
+          return;
+        }
+        alert('Please provide an image URL or choose a file to upload.');
+      });
+
+      // show immediate preview when file selected
+      if (fileInput) {
+        fileInput.addEventListener('change', () => {
+          const f = fileInput.files && fileInput.files[0];
+          if (!f) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (preview) preview.style.backgroundImage = `url('${e.target.result}')`;
+          };
+          reader.readAsDataURL(f);
+        });
+      }
+    }
+
+    applySavedHomeImage();
+    setupHomeImageHandlers();
+
+    // Support chat JS: handlers and helpers
+    (function setupSupportChat() {
+      const supportBtn = document.getElementById('support-btn');
+      const supportWindow = document.getElementById('support-window');
+      const supportClose = document.getElementById('support-close');
+      const supportMessages = document.getElementById('support-messages');
+      const supportText = document.getElementById('support-text');
+      const supportSend = document.getElementById('support-send');
+
+      function openSupport() { supportWindow.style.display = 'flex'; supportText.focus(); }
+      function closeSupport() { supportWindow.style.display = 'none'; }
+
+      function appendSupportMessage(from, text) {
+        const p = document.createElement('div');
+        p.className = 'support-msg';
+        p.innerHTML = `<span class="from">${from}:</span> <span class="text">${text}</span>`;
+        supportMessages.appendChild(p);
+        supportMessages.scrollTop = supportMessages.scrollHeight;
+      }
+
+      // expose for automated messages
+      window.appendLiveChatMessage = appendSupportMessage;
+
+      supportBtn.addEventListener('click', () => {
+        if (supportWindow.style.display === 'flex') closeSupport(); else openSupport();
+      });
+      supportClose.addEventListener('click', closeSupport);
+
+      supportSend.addEventListener('click', () => {
+        const txt = supportText.value.trim();
+        if (!txt) return;
+        appendSupportMessage('You', txt);
+        supportText.value = '';
+        // simulate support reply
+        setTimeout(() => {
+          appendSupportMessage('Support', 'Thanks—we received your message and will reply shortly.');
+        }, 1200);
+      });
+
+      supportText.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); supportSend.click(); }
+      });
+    })();
+
+    showPage('login');
+  </script>
+</body>
+
+</html>
