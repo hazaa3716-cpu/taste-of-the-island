@@ -1,51 +1,56 @@
-// Admin dashboard - check authentication first
-function checkAdminAuth() {
-  const user = JSON.parse(localStorage.getItem('currentUser'));
-  if (!user || user.role !== 'admin') {
-    alert('Admin access required. Redirecting to login...');
+// Premium Admin Dashboard Logic - Creative Revamp
+let currentProducts = [];
+
+async function checkAdminAuth() {
+  try {
+    const resp = await fetch('auth.php?action=verify');
+    const data = await resp.json();
+    if (!data.authenticated || data.user.role !== 'admin') {
+      alert('Admin access required. Redirecting to login...');
+      window.location.href = 'index.html';
+      return false;
+    }
+    document.getElementById('admin-user-info').querySelector('span').textContent = data.user.username;
+    localStorage.setItem('currentUser', JSON.stringify(data.user));
+    return true;
+  } catch (e) {
+    console.error('Auth verification failed', e);
     window.location.href = 'index.html';
     return false;
   }
-  return true;
+}
+
+// Data Fetching & Rendering
+async function refreshDashboard() {
+  await Promise.all([
+    renderMetrics(),
+    renderOrders(),
+    renderProducts(),
+    renderUsers()
+  ]);
+  addActivity('Dashboard Refreshed', 'All metrics and data have been updated.');
 }
 
 async function renderMetrics() {
   try {
-    const resp = await fetch('orders.php?action=list');
-    const orders = await resp.json();
+    const [ordersResp, productsResp, usersResp] = await Promise.all([
+      fetch('orders.php?action=list'),
+      fetch('menu.php'),
+      fetch('auth.php?action=list_users')
+    ]);
 
-    const respUsers = await fetch('auth.php?action=list_users'); // Wait, I need to add list_users to auth.php or similar
-    // Actually, I'll just fetch orders and calculate from there for now, 
-    // and maybe add a generic stats endpoint later.
+    const orders = await ordersResp.json();
+    const products = await productsResp.json();
+    const users = await usersResp.json();
 
-    const totalOrders = orders.length;
-    const revenue = orders.reduce((s, o) => s + parseFloat(o.total_price), 0).toFixed(2);
+    const revenue = orders.reduce((s, o) => s + (parseFloat(o.total_price) || 0), 0);
 
-    document.getElementById('metric-orders').textContent = totalOrders;
-    document.getElementById('metric-revenue').textContent = `TSh ${revenue}`;
-
-    renderUsers();
-  } catch (e) {
-    console.error('Failed to render metrics', e);
-  }
-}
-
-async function renderUsers() {
-  try {
-    const resp = await fetch('auth.php?action=list_users');
-    const users = await resp.json();
-    const tbody = document.querySelector('#users-table tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    users.forEach(u => {
-      const tr = document.createElement('tr');
-      const role = u.role || 'user';
-      tr.innerHTML = `<td>${u.username}</td><td><span class="role-badge ${role}">${role}</span></td><td><button class="action-btn" data-user="${u.username}">Remove</button></td>`;
-      tbody.appendChild(tr);
-    });
+    document.getElementById('metric-orders').textContent = orders.length;
+    document.getElementById('metric-revenue').textContent = `TSh ${Math.round(revenue).toLocaleString()}`;
     document.getElementById('metric-users').textContent = users.length;
+    document.getElementById('metric-products').textContent = products.length;
   } catch (e) {
-    console.error('Failed to render users', e);
+    console.error('Failed to load metrics', e);
   }
 }
 
@@ -56,73 +61,223 @@ async function renderOrders() {
 
     const recentTbody = document.querySelector('#orders-table tbody');
     const allTbody = document.querySelector('#all-orders-table tbody');
+    if (!recentTbody || !allTbody) return;
     recentTbody.innerHTML = '';
     allTbody.innerHTML = '';
 
     orders.forEach((o, index) => {
-      const tr = document.createElement('tr');
-      const content = `<td>${o.id}</td><td>${o.username || 'Guest'}</td><td>-</td><td>TSh ${parseFloat(o.total_price).toFixed(2)}</td><td><span class="status ${o.status.toLowerCase().replace(/\s/g, '-')}">${o.status}</span></td>`;
-      tr.innerHTML = content;
+      const row = `
+        <td>#${o.id}</td>
+        <td>${o.username || 'Guest'}</td>
+        <td>TSh ${Math.round(o.total_price).toLocaleString()}</td>
+        <td><span class="status-badge ${o.status.toLowerCase().replace(/\s/g, '-')}">${o.status}</span></td>
+        <td>
+          <select class="status-select" data-id="${o.id}">
+            <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option value="Preparing" ${o.status === 'Preparing' ? 'selected' : ''}>Preparing</option>
+            <option value="Out for delivery" ${o.status === 'Out for delivery' ? 'selected' : ''}>Out for delivery</option>
+            <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+            <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+          </select>
+        </td>
+      `;
 
-      if (index < 5) recentTbody.appendChild(tr.cloneNode(true));
+      if (index < 5) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = row;
+        recentTbody.appendChild(tr);
+      }
 
       const trAll = document.createElement('tr');
-      trAll.innerHTML = content + `<td>${o.created_at}</td>`;
+      trAll.innerHTML = `<td>#${o.id}</td><td>${o.username || 'Guest'}</td><td>TSh ${Math.round(o.total_price).toLocaleString()}</td><td><span class="status-badge ${o.status.toLowerCase().replace(/\s/g, '-')}">${o.status}</span></td><td>${new Date(o.created_at).toLocaleDateString()}</td><td><select class="status-select" data-id="${o.id}"><option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option><option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option></select></td>`;
       allTbody.appendChild(trAll);
+    });
+
+    document.querySelectorAll('.status-select').forEach(sel => {
+      sel.onchange = async (e) => await updateOrderStatus(e.target.dataset.id, e.target.value);
     });
   } catch (e) {
     console.error('Failed to render orders', e);
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (!checkAdminAuth()) return;
+async function renderProducts() {
+  try {
+    const resp = await fetch('menu.php');
+    currentProducts = await resp.json();
+    const tbody = document.querySelector('#products-table tbody');
+    tbody.innerHTML = '';
 
-  renderMetrics();
-  renderOrders();
-
-  // Sidebar navigation
-  document.querySelectorAll('.admin-sidebar li').forEach(li => {
-    li.addEventListener('click', () => {
-      const section = li.dataset.section;
-      switchSection(section);
+    currentProducts.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><div style="width:40px;height:40px;border-radius:8px;background:url('${p.image_url}') center/cover"></div></td>
+        <td>${p.name}</td>
+        <td>${p.category_name}</td>
+        <td>TSh ${p.price}</td>
+        <td>${p.is_available == 1 ? '✅' : '❌'}</td>
+        <td style="display:flex; gap:0.5rem;">
+          <button class="action-btn" onclick="editProduct(${p.id})">Edit</button>
+          <button class="action-btn delete" onclick="deleteProduct(${p.id})">Del</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
     });
+  } catch (e) {
+    console.error('Failed to render products', e);
+  }
+}
+
+async function renderUsers() {
+  try {
+    const resp = await fetch('auth.php?action=list_users');
+    const users = await resp.json();
+    const tbody = document.querySelector('#users-table tbody');
+    tbody.innerHTML = '';
+
+    users.forEach(u => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${u.username}</td>
+        <td>${u.role}</td>
+        <td>${new Date(u.created_at).toLocaleDateString()}</td>
+        <td><button class="action-btn delete" onclick="alert('Disabled')">Ban</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    console.error('Failed to render users', e);
+  }
+}
+
+async function updateOrderStatus(id, status) {
+  try {
+    const resp = await fetch('orders.php?action=update_status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status })
+    });
+    const res = await resp.json();
+    if (res.success) {
+      showToast('Order Update Success');
+      addActivity('Order Update', `Order #${id} changed to ${status}`);
+      refreshDashboard();
+    }
+  } catch (e) { console.error(e); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Confirm delete?')) return;
+  try {
+    const resp = await fetch('menu.php?action=delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    if ((await resp.json()).success) {
+      showToast('Product Removed');
+      addActivity('Menu Change', `Product ID ${id} deleted.`);
+      renderProducts();
+      renderMetrics();
+    }
+  } catch (e) { console.error(e); }
+}
+
+function editProduct(id) {
+  const p = currentProducts.find(x => x.id == id);
+  if (!p) return;
+  document.getElementById('modal-title').textContent = 'Modify Item';
+  document.getElementById('product-id').value = p.id;
+  document.getElementById('prod-name').value = p.name;
+  document.getElementById('prod-category').value = p.category_id;
+  document.getElementById('prod-price').value = p.price;
+  document.getElementById('prod-image').value = p.image_url;
+  document.getElementById('prod-discount').value = p.discount;
+  document.getElementById('product-modal').style.display = 'flex';
+}
+
+function addActivity(title, desc) {
+  const list = document.getElementById('activity-list');
+  const li = document.createElement('li');
+  li.style.cssText = 'margin-bottom: 1rem; border-left: 2px solid var(--primary); padding-left: 1rem; animation: fadeIn 0.3s ease;';
+  li.innerHTML = `<strong>${title}</strong><br><small>${desc}</small>`;
+  list.prepend(li);
+  if (list.children.length > 8) list.lastElementChild.remove();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!await checkAdminAuth()) return;
+  refreshDashboard();
+
+  document.querySelectorAll('.admin-sidebar li').forEach(li => {
+    li.onclick = () => {
+      document.querySelectorAll('.admin-sidebar li').forEach(l => l.classList.remove('active'));
+      li.classList.add('active');
+      const section = li.dataset.section;
+      document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+      document.getElementById(section).classList.add('active');
+      addActivity('Navigation', `Switched to ${section} view.`);
+    };
   });
 
-  // Settings form remains localStorage for now as it's store-wide config
-  const settingsForm = document.getElementById('settings-form');
-  if (settingsForm) {
-    settingsForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const settings = {
-        storeName: document.getElementById('store-name').value,
-        deliveryFee: document.getElementById('delivery-fee').value,
-        openingHours: document.getElementById('opening-hours').value,
-        closingHours: document.getElementById('closing-hours').value,
-        savedAt: new Date().toLocaleString()
-      };
-      localStorage.setItem('storeSettings', JSON.stringify(settings));
-      const msg = document.getElementById('settings-msg');
-      msg.textContent = '✓ Settings saved successfully!';
-      msg.style.color = '#2e7d32';
-      setTimeout(() => msg.textContent = '', 3000);
-    });
-  }
+  document.getElementById('open-add-product').onclick = () => {
+    document.getElementById('modal-title').textContent = 'Add New Item';
+    document.getElementById('product-form').reset();
+    document.getElementById('product-id').value = '';
+    document.getElementById('product-modal').style.display = 'flex';
+  };
 
-  // Logout
-  const logoutBtn = document.getElementById('admin-logout');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem('currentUser');
-      window.location.href = 'index.html';
-    });
-  }
+  document.getElementById('product-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('product-id').value;
+    const action = id ? 'edit' : 'add';
+    const payload = {
+      id: id || null,
+      name: document.getElementById('prod-name').value,
+      category_id: document.getElementById('prod-category').value,
+      price: document.getElementById('prod-price').value,
+      image_url: document.getElementById('prod-image').value,
+      discount: document.getElementById('prod-discount').value,
+      is_available: 1
+    };
+
+    try {
+      const resp = await fetch(`menu.php?action=${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if ((await resp.json()).success) {
+        showToast('Save Complete');
+        addActivity('Menu Change', `Product "${payload.name}" was ${id ? 'updated' : 'added'}.`);
+        document.getElementById('product-modal').style.display = 'none';
+        renderProducts();
+        renderMetrics();
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  document.getElementById('admin-logout').onclick = async () => {
+    await fetch('auth.php?action=logout');
+    localStorage.removeItem('currentUser');
+    window.location.href = 'index.html';
+  };
 });
 
-function switchSection(sectionId) {
-  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
-  document.getElementById(sectionId).classList.add('active');
-
-  document.querySelectorAll('.admin-sidebar li').forEach(li => li.classList.remove('active'));
-  document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:var(--primary);color:white;padding:1rem 2rem;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.3);z-index:10000;animation:slideIn 0.3s ease-out;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(100%)';
+    t.style.transition = 'all 0.3s ease';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
 }
+
+const style = document.createElement('style');
+style.innerHTML = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }`;
+document.head.appendChild(style);

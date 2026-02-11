@@ -1,5 +1,6 @@
 <?php
 // auth.php - Authentication API
+session_start();
 header('Content-Type: application/json');
 require_once 'db.php';
 
@@ -15,21 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo JSON_encode(['success' => false, 'message' => 'Username and password required']);
             exit;
         }
-
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
         try {
             $stmt = $pdo->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
             $stmt->execute([$username, $hashedPassword]);
             echo JSON_encode(['success' => true, 'message' => 'Registration successful']);
         }
         catch (PDOException $e) {
-            if ($e->getCode() == 23000) {
-                echo JSON_encode(['success' => false, 'message' => 'Username already exists']);
-            }
-            else {
-                echo JSON_encode(['success' => false, 'message' => 'Registration failed: ' . $e->getMessage()]);
-            }
+            echo JSON_encode(['success' => false, 'message' => 'Registration failed: ' . ($e->getCode() == 23000 ? 'Username exists' : $e->getMessage())]);
         }
     }
     elseif ($action === 'login') {
@@ -37,28 +31,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
             $stmt->execute([$username]);
             $user = $stmt->fetch();
-
             if ($user && password_verify($password, $user['password'])) {
-                unset($user['password']); // Don't send password hash to frontend
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role'] = $user['role'];
+                unset($user['password']);
                 echo JSON_encode(['success' => true, 'user' => $user]);
             }
             else {
-                echo JSON_encode(['success' => false, 'message' => 'Invalid username or password']);
+                echo JSON_encode(['success' => false, 'message' => 'Invalid credentials']);
             }
         }
         catch (PDOException $e) {
-            echo JSON_encode(['success' => false, 'message' => 'Login failed: ' . $e->getMessage()]);
+            echo JSON_encode(['success' => false, 'message' => 'Login error']);
         }
     }
 }
-elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'list_users') {
-    try {
-        $stmt = $pdo->query("SELECT id, username, role, created_at FROM users");
-        $users = $stmt->fetchAll();
-        echo JSON_encode($users);
+elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    if ($action === 'verify') {
+        if (isset($_SESSION['user_id'])) {
+            echo JSON_encode([
+                'authenticated' => true,
+                'user' => [
+                    'id' => $_SESSION['user_id'],
+                    'username' => $_SESSION['username'],
+                    'role' => $_SESSION['role']
+                ]
+            ]);
+        }
+        else {
+            echo JSON_encode(['authenticated' => false]);
+        }
     }
-    catch (PDOException $e) {
-        echo JSON_encode(['error' => $e->getMessage()]);
+    elseif ($action === 'logout') {
+        session_destroy();
+        echo JSON_encode(['success' => true]);
+    }
+    elseif ($action === 'list_users') {
+        if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+            http_response_code(403);
+            exit;
+        }
+        $stmt = $pdo->query("SELECT id, username, role, created_at FROM users");
+        echo JSON_encode($stmt->fetchAll());
     }
 }
 ?>

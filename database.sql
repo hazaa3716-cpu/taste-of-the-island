@@ -78,8 +78,6 @@ INSERT INTO products (category_id, name, price, rating, reviews_count, discount,
 (2, 'Milk shake', 2000, 4.4, 65, 10, 'https://i.pinimg.com/736x/ba/c9/0d/bac90dcb464636dbad025d79c19a93e4.jpg'),
 (2, 'Maziwa mgando', 1000, 4.5, 75, 0, 'https://i.pinimg.com/1200x/e3/0e/0a/e30e0a3070bae2b2ec7a9a6101c85b7b.jpg');
 
--- Default Admin (Password: admin123)
--- NOTE: In production, password should be hashed. Using plain text for demonstration if hashing is not immediately available.
--- However, I will use password_hash in PHP.
-INSERT INTO users (username, password, role) VALUES ('admin', '$2y$10$A5v3wL3mXmXmXmXmXmXmOe9I2mXmXmXmXmXmXmXmXmXmXmXmXmXmXm', 'admin'); 
+-- Default Admin (Username: sam, Password: sam22)
+INSERT INTO users (username, password, role) VALUES ('sam', '$2y$10$V4Z.hEpMOI6wI50rcnOskuwVaY/hgb6A7OGsCa1E2GZCVYsBsglCy', 'admin'); 
 -- The above is a dummy hash. PHP script should handle real registration.
