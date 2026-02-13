@@ -7,39 +7,40 @@ require_once 'db.php';
 $action = $_GET['action'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'submit') {
-    $data = JSON_decode(file_get_contents('php://input'), true);
+    $data = json_decode(file_get_contents('php://input'), true);
     $userId = $data['userId'] ?? null;
     if (!$userId && isset($_SESSION['user_id'])) {
         $userId = $_SESSION['user_id'];
     }
-    $totalPrice = $data['totalPrice'] ?? 0;
-    $phone = $data['phone'] ?? '';
+    $totalAmount = $data['totalPrice'] ?? 0; // Frontend sends totalPrice
     $address = $data['address'] ?? '';
     $items = $data['items'] ?? [];
 
     if (empty($items)) {
-        echo JSON_encode(['success' => false, 'message' => 'No items in order']);
+        echo json_encode(['success' => false, 'message' => 'No items in order']);
         exit;
     }
 
     try {
         $pdo->beginTransaction();
 
-        $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_price, phone, address) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$userId, $totalPrice, $phone, $address]);
+        // New schema: total_amount, delivery_address (no phone field)
+        $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_amount, delivery_address) VALUES (?, ?, ?)");
+        $stmt->execute([$userId, $totalAmount, $address]);
         $orderId = $pdo->lastInsertId();
 
-        $stmtItem = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price_at_time) VALUES (?, ?, ?, ?)");
+        // New schema: price (not price_at_time)
+        $stmtItem = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
         foreach ($items as $item) {
             $stmtItem->execute([$orderId, $item['id'], $item['quantity'], $item['price']]);
         }
 
         $pdo->commit();
-        echo JSON_encode(['success' => true, 'orderId' => $orderId]);
+        echo json_encode(['success' => true, 'orderId' => $orderId]);
     }
     catch (PDOException $e) {
         $pdo->rollBack();
-        echo JSON_encode(['success' => false, 'message' => 'Order failed: ' . $e->getMessage()]);
+        echo json_encode(['success' => false, 'message' => 'Order failed: ' . $e->getMessage()]);
     }
 }
 elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'list') {
@@ -49,13 +50,13 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'list') {
     // Security check: Only admin can list all orders or specific user's orders (unless requester is that user)
     if (!isset($_SESSION['role'])) {
         http_response_code(401);
-        echo JSON_encode(['error' => 'Login required']);
+        echo json_encode(['error' => 'Login required']);
         exit;
     }
 
     if ($_SESSION['role'] !== 'admin' && ($userId && $_SESSION['user_id'] != $userId)) {
         http_response_code(403);
-        echo JSON_encode(['error' => 'Unauthorized']);
+        echo json_encode(['error' => 'Unauthorized']);
         exit;
     }
 
@@ -69,29 +70,34 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'list') {
             $stmt->execute([$userId]);
         }
         else {
-            $stmt = $pdo->query("SELECT o.*, u.username FROM orders o LEFT JOIN users u ON o.user_id = u.id ORDER BY o.created_at DESC");
+            // New schema: users table has 'name' field (not username)
+            $stmt = $pdo->query("SELECT o.*, u.name as username FROM orders o LEFT JOIN users u ON o.user_id = u.id ORDER BY o.created_at DESC");
         }
         $orders = $stmt->fetchAll();
-        echo JSON_encode($orders);
+        // Fix field name for frontend compatibility: total_amount -> total_price
+        foreach ($orders as &$order) {
+            $order['total_price'] = $order['total_amount'];
+        }
+        echo json_encode($orders);
     }
     catch (PDOException $e) {
-        echo JSON_encode(['error' => $e->getMessage()]);
+        echo json_encode(['error' => $e->getMessage()]);
     }
 }
 elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'update_status') {
     if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
         http_response_code(403);
-        echo JSON_encode(['error' => 'Unauthorized']);
+        echo json_encode(['error' => 'Unauthorized']);
         exit;
     }
-    $data = JSON_decode(file_get_contents('php://input'), true);
+    $data = json_decode(file_get_contents('php://input'), true);
     try {
         $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
         $stmt->execute([$data['status'], $data['id']]);
-        echo JSON_encode(['success' => true]);
+        echo json_encode(['success' => true]);
     }
     catch (PDOException $e) {
-        echo JSON_encode(['success' => false, 'message' => $e->getMessage()]);
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
 }
 ?>

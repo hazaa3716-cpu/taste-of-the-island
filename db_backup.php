@@ -2,7 +2,7 @@
 // db.php - Database connection using PDO
 
 $host = 'localhost';
-$db = 'food_ordering_db';
+$db = 'swahili_food';
 $user = 'root';
 $pass = ''; // Default XAMPP password is empty
 $charset = 'utf8mb4';
